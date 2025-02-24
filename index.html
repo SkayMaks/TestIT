@@ -1,0 +1,278 @@
+<!doctype html><html><head><style type="text/css">/* style.css */
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+}
+
+header {
+    background-color: #333;
+    color: white;
+    padding: 1em 0;
+    text-align: center;
+}
+
+main {
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.page {
+    padding: 20px;
+    background-color: white;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.hidden {
+    display: none;
+}
+
+.buttons {
+    text-align: center;
+    margin-top: 20px;
+}
+
+button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 5px;
+}
+
+button:hover {
+    background-color: #3e8e41;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"] {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box; /* Important for consistent sizing */
+}
+
+.error {
+    color: red;
+}
+
+footer {
+    background-color: #333;
+    color: white;
+    text-align: center;
+    padding: 1em 0;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}</style></head><body><!DOCTYPE html>
+<html lang="ru">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Подписки</title>
+	<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+	<header>
+		<h1>Подписки</h1>
+	</header>
+
+	<main>
+		<section id="home" class="page">
+			<h2>Добро пожаловать!</h2>
+			<img src="https://mokka.ru/blog/wp-content/uploads/2022/11/template-1599663_1280.png" alt="Пример картинки" width="500">
+			<div class="buttons">
+				<button onclick="showPage('login')">Авторизоваться</button>
+				<button onclick="showPage('register')">Зарегистрироваться</button>
+			</div>
+		</section>
+
+		<section id="login" class="page hidden">
+			<h2>Авторизация</h2>
+			<form id="loginForm" onsubmit="login(event)">
+				<label for="loginUsername">Логин:</label>
+				<input type="text" id="loginUsername" name="loginUsername" required><br><br>
+				<label for="loginPassword">Пароль:</label>
+				<input type="password" id="loginPassword" name="loginPassword" required><br><br>
+				<button type="submit">Войти</button>
+				<button type="button" onclick="showPage('home')">Назад</button>
+			</form>
+			<p id="loginError" class="error"></p>
+		</section>
+
+		<section id="register" class="page hidden">
+			<h2>Регистрация</h2>
+			<form id="registerForm" onsubmit="register(event)">
+				<label for="registerUsername">Логин:</label>
+				<input type="text" id="registerUsername" name="registerUsername" required><br><br>
+				<label for="registerPassword">Пароль:</label>
+				<input type="password" id="registerPassword" name="registerPassword" required><br><br>
+				<label for="registerPasswordConfirm">Повторите пароль:</label>
+				<input type="password" id="registerPasswordConfirm" name="registerPasswordConfirm" required><br><br>
+				<label for="registerEmail">Почта:</label>
+				<input type="email" id="registerEmail" name="registerEmail" required><br><br>
+				<button type="submit">Зарегистрироваться</button>
+				<button type="button" onclick="showPage('home')">Назад</button>
+			</form>
+			<p id="registerError" class="error"></p>
+		</section>
+
+		<section id="subscription" class="page hidden">
+			<h2>Оформление подписки</h2>
+			<p>Стоимость подписки: <span id="subscriptionPrice">1199</span> руб.</p>
+			<form id="subscriptionForm" onsubmit="applyPromoCode(event)">
+				<label for="promoCode">Промокод:</label>
+				<input type="text" id="promoCode" name="promoCode">
+				<button type="submit">Применить промокод</button>
+				<button type="button" onclick="removePromoCode()">Удалить промокод</button>
+			</form>
+			<p id="promoCodeMessage"></p>
+			<button onclick="subscribe()">Оформить</button>
+			<button type="button" onclick="logout()">Выйти</button>
+		</section>
+	</main>
+
+	<footer>
+		<p>&copy; 2024 Подписки. Все права защищены.</p>
+	</footer>
+
+	<script src="script.js"></script>
+</body>
+
+</html><script type="text/javascript">// script.js
+let isLoggedIn = false;
+let currentPrice = 1199;
+let promoCodeApplied = false;
+let promoCodeValue = 0;
+let registeredUsers = {}; // Объект для хранения зарегистрированных пользователей
+
+const validPromoCodes = {
+  "sale1199": 0,
+  "sale1000": 1000,
+  "sale999": 999,
+  "sale1500": 1500
+};
+
+function showPage(pageId) {
+  const pages = document.querySelectorAll('.page');
+  pages.forEach(page => page.classList.add('hidden'));
+  document.getElementById(pageId).classList.remove('hidden');
+}
+
+
+function login(event) {
+  event.preventDefault();
+  const username = document.getElementById('loginUsername').value;
+  const password = document.getElementById('loginPassword').value;
+
+  if (registeredUsers[username] && registeredUsers[username].password === password) {
+    isLoggedIn = true;
+    showPage('subscription');
+    document.getElementById('loginError').textContent = "";
+  } else {
+    document.getElementById('loginError').textContent = "Неверный логин или пароль.";
+  }
+}
+
+function register(event) {
+  event.preventDefault();
+  const username = document.getElementById('registerUsername').value;
+  const password = document.getElementById('registerPassword').value;
+  const passwordConfirm = document.getElementById('registerPasswordConfirm').value;
+  const email = document.getElementById('registerEmail').value;
+
+  if (password !== passwordConfirm) {
+    document.getElementById('registerError').textContent = "Пароли не совпадают.";
+    return;
+  }
+
+  if (username in registeredUsers) { //баг 5: юзернейм можно занять
+    document.getElementById('registerError').textContent = "Такой юзернейм уже занят.";
+    return;
+  }
+
+
+  if (password.length < 3) {
+    document.getElementById('registerError').textContent = "Пароль слишком короткий.";
+    return;
+  }
+
+  registeredUsers[username] = {
+    password: password,
+    email: email
+  };
+
+  alert("Регистрация прошла успешно!");
+  showPage('login');
+}
+
+function applyPromoCode(event) {
+  event.preventDefault();
+  const promoCode = document.getElementById('promoCode').value;
+  const promoCodeMessage = document.getElementById('promoCodeMessage');
+
+  if (validPromoCodes.hasOwnProperty(promoCode)) {
+
+    if (!promoCodeApplied) {
+      promoCodeValue = validPromoCodes[promoCode];
+      currentPrice = currentPrice - promoCodeValue;
+
+      document.getElementById('subscriptionPrice').textContent = currentPrice;
+      promoCodeMessage.textContent = "Промокод применен. Новая цена: " + currentPrice + " руб.";
+      promoCodeApplied = true;
+    } else {
+      promoCodeMessage.textContent = "Промокод уже был применен.";
+    }
+
+  } else {
+    promoCodeMessage.textContent = "Неверный промокод.";
+  }
+}
+
+function removePromoCode() {
+  const promoCodeMessage = document.getElementById('promoCodeMessage');
+  if (promoCodeApplied) {
+    currentPrice = 1199;
+    document.getElementById('subscriptionPrice').textContent = currentPrice;
+    document.getElementById('promoCode').value = '';
+    promoCodeMessage.textContent = "Промокод удален. Цена возвращена к исходной.";
+    promoCodeApplied = false;
+    promoCodeValue = 0;
+  } else {
+    promoCodeMessage.textContent = "Промокод не был применен.";
+  }
+}
+
+function subscribe() {
+  if (currentPrice < 0) {
+    alert("Спасибо за подписку! С вас " + currentPrice + " рублей!");
+  } else {
+    alert("Спасибо за подписку!");
+  }
+}
+
+
+function logout() {
+  isLoggedIn = false;
+  showPage('home');
+  currentPrice = 1199;
+  promoCodeApplied = false;
+  promoCodeValue = 0;
+  document.getElementById('subscriptionPrice').textContent = currentPrice;
+  document.getElementById('promoCode').value = '';
+  document.getElementById('promoCodeMessage').textContent = '';
+}
+
+// Инициализация: показываем главную страницу
+showPage('home');</script></body><html>
